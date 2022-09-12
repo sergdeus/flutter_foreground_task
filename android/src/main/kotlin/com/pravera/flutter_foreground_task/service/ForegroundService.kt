@@ -22,6 +22,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.view.FlutterCallbackInformation
 import kotlinx.coroutines.*
 import java.util.*
+import android.net.Uri;
 
 private val TAG = ForegroundService::class.java.simpleName
 private const val ACTION_TASK_START = "onStart"
@@ -40,7 +41,7 @@ private const val DATA_FIELD_NAME = "data"
 class ForegroundService: Service(), MethodChannel.MethodCallHandler {
 	companion object {
 		/** Returns whether the foreground service is running. */
-		var isRunningService = false 
+		var isRunningService = false
 			private set
 	}
 
@@ -178,8 +179,8 @@ class ForegroundService: Service(), MethodChannel.MethodCallHandler {
 			)
 		}
 		val iconResId = if (iconResType.isNullOrEmpty()
-				|| iconResPrefix.isNullOrEmpty()
-				|| iconName.isNullOrEmpty())
+			|| iconResPrefix.isNullOrEmpty()
+			|| iconName.isNullOrEmpty())
 			getAppIconResourceId(pm)
 		else
 			getDrawableResourceId(iconResType, iconResPrefix, iconName)
@@ -200,11 +201,21 @@ class ForegroundService: Service(), MethodChannel.MethodCallHandler {
 			val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 			nm.createNotificationChannel(channel)
 
+			val explainIntent = Intent("android.intent.action.VIEW")
+			explainIntent.setData(Uri.parse("https://github.com/AgoraDesk-LocalMonero/agoradesk-app-foss/blob/main/Notifications.md"))
+			val explainPendingIntent: PendingIntent =
+				PendingIntent.getActivity(
+					this,
+					0,
+					explainIntent,
+					PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+				)
+
 			val builder = Notification.Builder(this, notificationOptions.channelId)
 			builder.setOngoing(true)
 			builder.setShowWhen(notificationOptions.showWhen)
 			builder.setSmallIcon(iconResId)
-			builder.setContentIntent(pendingIntent)
+			builder.setContentIntent(explainPendingIntent)
 			builder.setContentTitle(notificationOptions.contentTitle)
 			builder.setContentText(notificationOptions.contentText)
 			builder.setVisibility(notificationOptions.visibility)
@@ -219,11 +230,17 @@ class ForegroundService: Service(), MethodChannel.MethodCallHandler {
 			}
 			startForeground(notificationOptions.serviceId, builder.build())
 		} else {
+
+			val explainIntent = Intent("android.intent.action.VIEW")
+			explainIntent.setData(Uri.parse("https://github.com/AgoraDesk-LocalMonero/agoradesk-app-foss/blob/main/Notifications.md"))
+			val explainPendingIntent: PendingIntent =
+				PendingIntent.getActivity(this, 0, explainIntent, 0)
+
 			val builder = NotificationCompat.Builder(this, notificationOptions.channelId)
 			builder.setOngoing(true)
 			builder.setShowWhen(notificationOptions.showWhen)
 			builder.setSmallIcon(iconResId)
-			builder.setContentIntent(pendingIntent)
+			builder.setContentIntent(explainPendingIntent)
 			builder.setContentTitle(notificationOptions.contentTitle)
 			builder.setContentText(notificationOptions.contentText)
 			builder.setVisibility(notificationOptions.visibility)
