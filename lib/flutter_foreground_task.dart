@@ -8,20 +8,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/exception/foreground_task_exception.dart';
+import 'package:flutter_foreground_task/models/android_notification_options.dart';
 import 'package:flutter_foreground_task/models/foreground_task_options.dart';
 import 'package:flutter_foreground_task/models/ios_notification_options.dart';
-import 'package:flutter_foreground_task/models/android_notification_options.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_preferences_android/shared_preferences_android.dart';
-import 'package:shared_preferences_ios/shared_preferences_ios.dart';
 
 export 'package:flutter_foreground_task/exception/foreground_task_exception.dart';
+export 'package:flutter_foreground_task/models/android_notification_options.dart';
 export 'package:flutter_foreground_task/models/foreground_task_options.dart';
 export 'package:flutter_foreground_task/models/ios_notification_options.dart';
 export 'package:flutter_foreground_task/models/notification_button.dart';
 export 'package:flutter_foreground_task/models/notification_channel_importance.dart';
 export 'package:flutter_foreground_task/models/notification_icon_data.dart';
-export 'package:flutter_foreground_task/models/android_notification_options.dart';
 export 'package:flutter_foreground_task/models/notification_priority.dart';
 export 'package:flutter_foreground_task/models/notification_visibility.dart';
 export 'package:flutter_foreground_task/ui/will_start_foreground_task.dart';
@@ -68,12 +65,8 @@ class FlutterForegroundTask {
     bool? printDevLog,
   }) async {
     _androidNotificationOptions = androidNotificationOptions;
-    _iosNotificationOptions = iosNotificationOptions ??
-        _iosNotificationOptions ??
-        const IOSNotificationOptions();
-    _foregroundTaskOptions = foregroundTaskOptions ??
-        _foregroundTaskOptions ??
-        const ForegroundTaskOptions();
+    _iosNotificationOptions = iosNotificationOptions ?? _iosNotificationOptions ?? const IOSNotificationOptions();
+    _foregroundTaskOptions = foregroundTaskOptions ?? _foregroundTaskOptions ?? const ForegroundTaskOptions();
     _printDevLog = printDevLog ?? _printDevLog;
     _printMessage('FlutterForegroundTask has been initialized.');
   }
@@ -101,8 +94,7 @@ class FlutterForegroundTask {
     options['notificationContentText'] = notificationText;
     if (callback != null) {
       options.addAll(_foregroundTaskOptions!.toJson());
-      options['callbackHandle'] =
-          PluginUtilities.getCallbackHandle(callback)?.toRawHandle();
+      options['callbackHandle'] = PluginUtilities.getCallbackHandle(callback)?.toRawHandle();
     }
 
     if (await _methodChannel.invokeMethod('startForegroundService', options)) {
@@ -141,8 +133,7 @@ class FlutterForegroundTask {
     options['notificationContentTitle'] = notificationTitle;
     options['notificationContentText'] = notificationText;
     if (callback != null) {
-      options['callbackHandle'] =
-          PluginUtilities.getCallbackHandle(callback)?.toRawHandle();
+      options['callbackHandle'] = PluginUtilities.getCallbackHandle(callback)?.toRawHandle();
     }
 
     if (await _methodChannel.invokeMethod('updateForegroundService', options)) {
@@ -178,77 +169,6 @@ class FlutterForegroundTask {
     return _registerPort();
   }
 
-  /// Get the stored data with [key].
-  static Future<T?> getData<T>({required String key}) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.reload();
-    final prefsKey = _kPrefsKeyPrefix + key;
-    final value = prefs.get(prefsKey);
-
-    return (value is T) ? value : null;
-  }
-
-  /// Get all stored data.
-  static Future<Map<String, Object>> getAllData() async {
-    final dataList = <String, Object>{};
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.reload();
-    for (final key in prefs.getKeys()) {
-      if (key.contains(_kPrefsKeyPrefix)) {
-        final value = prefs.get(key);
-        if (value != null) {
-          final originKey = key.replaceAll(_kPrefsKeyPrefix, '');
-          dataList[originKey] = value;
-        }
-      }
-    }
-
-    return dataList;
-  }
-
-  /// Save data with [key].
-  static Future<bool> saveData({
-    required String key,
-    required Object value,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.reload();
-    final prefsKey = _kPrefsKeyPrefix + key;
-
-    if (value is int) {
-      return prefs.setInt(prefsKey, value);
-    } else if (value is double) {
-      return prefs.setDouble(prefsKey, value);
-    } else if (value is String) {
-      return prefs.setString(prefsKey, value);
-    } else if (value is bool) {
-      return prefs.setBool(prefsKey, value);
-    } else {
-      return false;
-    }
-  }
-
-  /// Remove data with [key].
-  static Future<bool> removeData({required String key}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final prefsKey = _kPrefsKeyPrefix + key;
-
-    return prefs.remove(prefsKey);
-  }
-
-  /// Clears all stored data.
-  static Future<bool> clearAllData() async {
-    final prefs = await SharedPreferences.getInstance();
-    for (final key in prefs.getKeys()) {
-      if (key.contains(_kPrefsKeyPrefix)) {
-        await prefs.remove(key);
-      }
-    }
-
-    return true;
-  }
-
   /// Minimize the app to the background.
   static void minimizeApp() => _methodChannel.invokeMethod('minimizeApp');
 
@@ -265,8 +185,7 @@ class FlutterForegroundTask {
     // This function only works on Android.
     if (!Platform.isAndroid) return;
 
-    _methodChannel
-        .invokeMethod('setOnLockScreenVisibility', {"isVisible": isVisible});
+    _methodChannel.invokeMethod('setOnLockScreenVisibility', {"isVisible": isVisible});
   }
 
   /// Returns whether the app is in the foreground.
@@ -295,8 +214,7 @@ class FlutterForegroundTask {
     // This function only works on Android.
     if (!Platform.isAndroid) return true;
 
-    return await _methodChannel
-        .invokeMethod('openIgnoreBatteryOptimizationSettings');
+    return await _methodChannel.invokeMethod('openIgnoreBatteryOptimizationSettings');
   }
 
   /// Request to ignore battery optimization.
@@ -304,8 +222,7 @@ class FlutterForegroundTask {
     // This function only works on Android.
     if (!Platform.isAndroid) return true;
 
-    return await _methodChannel
-        .invokeMethod('requestIgnoreBatteryOptimization');
+    return await _methodChannel.invokeMethod('requestIgnoreBatteryOptimization');
   }
 
   /// Returns whether the "android.permission.SYSTEM_ALERT_WINDOW" permission was granted.
@@ -329,18 +246,12 @@ class FlutterForegroundTask {
   /// It must always be called from a top-level function, otherwise foreground task will not work.
   static void setTaskHandler(TaskHandler handler) {
     // Create a method channel to communicate with the platform.
-    const _backgroundChannel =
-        MethodChannel('flutter_foreground_task/background');
+    const _backgroundChannel = MethodChannel('flutter_foreground_task/background');
 
     // Binding the framework to the flutter engine.
     WidgetsFlutterBinding.ensureInitialized();
 
     // Initializing the Platform-specific SharedPreferences plugin.
-    if (Platform.isAndroid) {
-      SharedPreferencesAndroid.registerWith();
-    } else if (Platform.isIOS) {
-      SharedPreferencesIOS.registerWith();
-    }
 
     // Set the method call handler for the background channel.
     _backgroundChannel.setMethodCallHandler((call) async {

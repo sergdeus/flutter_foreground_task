@@ -18,19 +18,12 @@ class MyTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, SendPort? sendPort) async {
     _sendPort = sendPort;
-
-    // You can use the getData function to get the stored data.
-    final customData =
-        await FlutterForegroundTask.getData<String>(key: 'customData');
-    print('customData: $customData');
   }
 
   @override
   Future<void> onEvent(DateTime timestamp, SendPort? sendPort) async {
     FlutterForegroundTask.updateService(
-      notificationTitle: 'MyTaskHandler',
-      notificationText: 'eventCount: $_eventCount'
-    );
+        notificationTitle: 'MyTaskHandler', notificationText: 'eventCount: $_eventCount');
 
     // Send data to the main isolate.
     sendPort?.send(_eventCount);
@@ -41,7 +34,6 @@ class MyTaskHandler extends TaskHandler {
   @override
   Future<void> onDestroy(DateTime timestamp, SendPort? sendPort) async {
     // You can use the clearAllData function to clear all the stored data.
-    await FlutterForegroundTask.clearAllData();
   }
 
   @override
@@ -95,8 +87,7 @@ class _ExamplePageState extends State<ExamplePage> {
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'notification_channel_id',
         channelName: 'Foreground Notification',
-        channelDescription:
-            'This notification appears when the foreground service is running.',
+        channelDescription: 'This notification appears when the foreground service is running.',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
         iconData: const NotificationIconData(
@@ -134,8 +125,7 @@ class _ExamplePageState extends State<ExamplePage> {
     // If you do not use the onNotificationPressed or launchApp function,
     // you do not need to write this code.
     if (!await FlutterForegroundTask.canDrawOverlays) {
-      final isGranted =
-          await FlutterForegroundTask.openSystemAlertWindowSettings();
+      final isGranted = await FlutterForegroundTask.openSystemAlertWindowSettings();
       if (!isGranted) {
         print('SYSTEM_ALERT_WINDOW permission denied!');
         return false;
@@ -143,7 +133,6 @@ class _ExamplePageState extends State<ExamplePage> {
     }
 
     // You can save data using the saveData function.
-    await FlutterForegroundTask.saveData(key: 'customData', value: 'hello');
 
     bool reqResult;
     if (await FlutterForegroundTask.isRunningService) {
